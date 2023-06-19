@@ -7,7 +7,6 @@ import 'dart:async';
 import 'package:github_repositories/services/repo.dart';
 
 
-
 class ApiService {
   static final HttpClient _httpClient = HttpClient();
   static const String _url = "api.github.com";
@@ -29,7 +28,7 @@ class ApiService {
       return null;
     }
     if (jsonResponse['items'] == null) {
-      return [];
+
     }
 
     return Repo.mapJSONStringToList(jsonResponse['items']);
@@ -55,7 +54,7 @@ class ApiService {
       return null;
     }
     if (jsonResponse['items'] == null) {
-      return [];
+
     }
 
     return Repo.mapJSONStringToList(jsonResponse['items']);
