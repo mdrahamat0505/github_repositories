@@ -1,56 +1,100 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:github_repositories/repositories_details.dart';
+import 'package:github_repositories/services/api_service.dart';
+import 'package:github_repositories/services/repo.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+import 'components/search.dart';
+import 'item.dart';
+
+class Home extends StatefulWidget {
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<StatefulWidget> createState() => _HomeState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomeState extends State<Home> {
+  List<Repo> _repos = [];
+  bool _isFetching = false;
+  late String _error;
+
+  @override
+  void initState() {
+    super.initState();
+    loadTrendingRepos();
+  }
+
+  void loadTrendingRepos() async {
+    setState(() {
+      _isFetching = true;
+      _error = '';
+    });
+
+    final repos = await ApiService.getTrendingRepositories();
+    setState(() {
+      _isFetching = false;
+      if (repos != null) {
+        this._repos = repos;
+      } else {
+        _error = 'Error fetching repos';
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // return Column(
-    //   children: [
-    //     TextButton(onPressed: (){
-    //   Get.to(RepositoriesDetails());
-    //     }, child: const Text('Repositories'),)
-    //   ],
-    // );
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "FloatingActionButton",
-        ),
-        backgroundColor: Colors.blue,
-        // actions: const <Widget>[
-        //   Text(
-        //     "GFG",
-        //     textScaleFactor: 3,
-        //   )
-        // ],
+        title: Container(
+            margin: const EdgeInsets.only(top: 4.0),
+            child: Column(
+              children: <Widget>[
+                Text('Github Repos',
+                    style: Theme
+                        .of(context)
+                        .textTheme.displaySmall?.apply(color: Colors.white)),
+                // Text('Trending',
+                //     style: Theme
+                //         .of(context)
+                //         .textTheme
+                //         .subhead
+                //         .apply(color: Colors.white))
+              ],
+            )),
+        centerTitle: true,
+        actions: <Widget>[
+          IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SearchList(),
+                    ));
+              }),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blue,
-        onPressed: () {
-          Get.to(() => const RepositoriesDetails());
-          // Get.to(
-          //   const RepositoriesDetails(),
-          // );
-
-          //Get.toNamed('/repositories_details');
-          //Get.off(const RepositoriesDetails());
-          //Get.offAll(const RepositoriesDetails());
-          //Get.back();
-          //Controller controller = Get.put(Controller()); // Rather Controller controller = Controller();
-        },
-        child: const Icon(
-          Icons.add,
-        ),
-      ),
+      body: buildBody(context),
     );
   }
+
+  Widget buildBody(BuildContext context) {
+    if (_isFetching) {
+      return Container(
+          alignment: Alignment.center, child: const Icon(Icons.timelapse));
+    } else if (_error != null) {
+      return Container(
+          alignment: Alignment.center,
+          child: Text(
+            _error,
+            style: Theme.of(context).textTheme.displaySmall,
+          ));
+    } else {
+      return ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          itemCount: _repos.length,
+          itemBuilder: (BuildContext context, int index) {
+            return GithubItem(_repos[index]);
+          });
+    }
+  }
 }
+
